@@ -1,13 +1,15 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import './index.css'
 
-function App() {
+import Home from "./components/Home/Home";
+
+const App = () => {
   return (
-    <div className="App">
-     <div>THats me</div>
+    <div className="bg-gradient-to-r from-violet-500 to-fuchsia-500 ">
+      <Home />
+      
     </div>
   );
-}
+};
 
 export default App;

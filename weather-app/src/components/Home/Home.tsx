@@ -1,47 +1,14 @@
 import React, { useEffect, useState } from "react";
-
 import { TbTemperatureCelsius } from "react-icons/tb";
 import { ImSpinner8 } from "react-icons/im";
-import {
-  IoMdSunny,
-  IoMdRainy,
-  IoMdCloudy,
-  IoMdSnow,
-  IoMdThunderstorm,
-  IoMdSearch,
-} from "react-icons/io";
+import { IoMdSearch } from "react-icons/io";
 
-import {
-  BsCloudHaze2Fill,
-  BsCloudDrizzleFill,
-  BsEye,
-  BsWater,
-  BsThermometer,
-  BsWind,
-} from "react-icons/bs";
+import { BsEye, BsWater, BsThermometer, BsWind } from "react-icons/bs";
 import axios from "axios";
 import HourlyCard from "../HourlyCard/HourlyCard";
-
-export interface Weather {
-  city: { name: string; country: string };
-  list: {
-    dt?:number;
-    dt_txt: string;
-    main: {
-      feels_like: number;
-      humidity: number;
-      temp: number;
-      temp_max: number;
-      temp_min: number;
-      visibility: number;
-      wind: { speed: number };
-    };
-    visibility: number;
-    weather: { main: string; description: string; icon: string }[];
-    wind: { speed: number };
-  }[];
-  message: string;
-}
+import { Weather } from "../../model/Weather";
+import DayCard from "../DayCard/DayCard";
+import { checkWeatherIcon } from "../../helper/helper";
 
 const API_KEY = "2ee9e9176b718db0ca63552f88e5814d";
 
@@ -51,7 +18,7 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [animate, setAnimate] = useState(false);
-  let weatherIcon;
+  let weatherIcon = data?.list[0].weather[0].main;
 
   useEffect(() => {
     const fetchData = () => {
@@ -68,9 +35,7 @@ const Home = () => {
     if (location !== "") {
       getCityByName(location);
       setLocation("");
-    }
-
-    if (location === "") {
+    } else {
       setAnimate(true);
       setTimeout(() => {
         setAnimate(false);
@@ -85,12 +50,11 @@ const Home = () => {
         `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${long}&units=metric&appid=${API_KEY}`
       )
       .then((res) => {
-        // set the data after 1500 ms
         setTimeout(() => {
           setData(res.data);
-          // set loading to false
+
           setLoading(false);
-        }, 1500);
+        }, 1000);
       })
       .catch((err) => {
         setLoading(false);
@@ -98,7 +62,7 @@ const Home = () => {
       });
   };
 
-  const getCityByName = async (name: string) => {
+  const getCityByName = (name: string) => {
     setLoading(true);
 
     axios
@@ -115,8 +79,6 @@ const Home = () => {
         setLoading(false);
         setErrorMessage(err.response.data.message);
       });
-
-    console.log(data);
   };
 
   useEffect(() => {
@@ -136,29 +98,7 @@ const Home = () => {
     );
   }
 
-  switch (data.list[0].weather[0].main) {
-    case "Clouds":
-      weatherIcon = <IoMdCloudy />;
-      break;
-    case "Haze":
-      weatherIcon = <BsCloudHaze2Fill />;
-      break;
-    case "Rain":
-      weatherIcon = <IoMdRainy className="text-[#31cafb]" />;
-      break;
-    case "Clear":
-      weatherIcon = <IoMdSunny className="text-[#ffde33]" />;
-      break;
-    case "Drizzle":
-      weatherIcon = <BsCloudDrizzleFill className="text-[#31cafb]" />;
-      break;
-    case "Snow":
-      weatherIcon = <IoMdSnow className="text-[#31cafb]" />;
-      break;
-    case "Thunderstorm":
-      weatherIcon = <IoMdThunderstorm />;
-      break;
-  }
+  weatherIcon = checkWeatherIcon(weatherIcon);
 
   const lowestTemp = data?.list.slice(0, 8).map((x) => {
     return Math.min(x.main.temp_min);
@@ -166,6 +106,50 @@ const Home = () => {
   const highestTemp = data?.list.slice(0, 8).map((x) => {
     return Math.max(x.main.temp_max);
   });
+
+  const groupWeatherByDays = () => {
+    const weatherGroupedByDays: any[] = [];
+
+    if (data) {
+      data.list.map((forecast: any) => {
+        console.log(forecast);
+
+        const currDate = new Date(forecast.dt * 1000).toLocaleString("en-GB", {
+          weekday: "long",
+        });
+        const existingDate = weatherGroupedByDays.find(
+          (day) => day.date === currDate
+        );
+
+        console.log(existingDate);
+        // const sameDates = existingDate.weather.dt_txt;
+        // console.log(sameDates);
+        
+        console.log(weatherGroupedByDays);
+        
+if(weatherGroupedByDays.length ==5){
+  weatherGroupedByDays.pop()
+}
+
+        if (existingDate  ) return existingDate.weather.push(forecast);
+
+        return weatherGroupedByDays.push({
+          data: forecast,
+          temp_max: forecast.main.temp_max,
+          temp_min: forecast.main.temp_min,
+          icon: forecast.weather[0].main,
+          description: forecast.weather[0].description,
+          date: currDate,
+          fullDate: currDate,
+          overallConditions: forecast.weather[0].main,
+          overallWeatherIcon: forecast.weather[0].icon,
+          weather: [forecast],
+        });
+      });
+    }
+
+    return weatherGroupedByDays;
+  };
 
   return (
     <div className="w-full h-[100%] bg-gradient-to-r from-violet-500 to-fuchsia-500 flex flex-col items-center justify-center px-4 lg:px-0 ">
@@ -200,103 +184,133 @@ const Home = () => {
           </button>
         </div>
       </form>
-      <div className="w-full max-w-[450px] bg-black/20 min-h-[584px] text-white backdrop-blur-[32px] rounded-[32px] py-12 px-6">
-        {loading ? (
-          <div className="w-full h-full flex justify-center items-center">
-            <ImSpinner8 className="text-white text-5xl animate-spin" />
-          </div>
-        ) : (
-          <div>
-            <div className="flex items-center gap-x-5">
-              <div className="text-[87px]">{weatherIcon}</div>
-              <div>
-                <div className="text-2xl font-semibold">
-                  {data?.city.name}, {data?.city.country}
-                </div>
+      <div className="flex w-full  flex-wrap justify-evenly">
+        <div className="w-full max-w-[450px] bg-black/20 min-h-auto text-white backdrop-blur-[32px] rounded-[32px] py-12 px-6">
+          {loading ? (
+            <div className="w-full h-full flex justify-center items-center">
+              <ImSpinner8 className="text-white text-5xl animate-spin" />
+            </div>
+          ) : (
+            <div>
+              <div className="flex items-center gap-x-5">
+                <div className="text-[87px]">{weatherIcon}</div>
                 <div>
-                  {new Date().getUTCDate()}/{new Date().getUTCMonth() + 1}/
-                  {new Date().getUTCFullYear()}
-                </div>
-              </div>
-            </div>
-            <div className="my-20">
-              <div className="flex justify-center items-start">
-                <div className="text-[144px] leading-none font-light">
-                  {parseInt(data?.list[0].main.temp as any)}
-                </div>
-                <div className="text-4xl">
-                  <TbTemperatureCelsius />
-                </div>
-              </div>
-
-              <div className="capitalize text-center">
-                {data?.list[0].weather[0].description}
-              </div>
-              <div className="capitalize text-center">
-                H:{parseInt(Math.max(...highestTemp).toString())} L:
-                {parseInt(Math.min(...lowestTemp).toString())}
-              </div>
-            </div>
-
-            <div className="max-w-[378px] mx-auto flex flex-col gap-y-6">
-              <div className="flex justify-between">
-                <div className="flex items-center gap-x-2">
-                  <div className="text-[20px]">
-                    <BsEye />
+                  <div className="text-2xl font-semibold">
+                    {data?.city.name}, {data?.city.country}
                   </div>
                   <div>
-                    Visibility:
-                    <span className="ml-2">
-                      {(data?.list[0].visibility as number) / 1000} km
-                    </span>
+                    {new Date().getUTCDate()}/{new Date().getUTCMonth() + 1}/
+                    {new Date().getUTCFullYear()}
                   </div>
                 </div>
-                <div className="flex items-center gap-x-2">
-                  <div className="text-[20px]">
-                    <BsThermometer />
+              </div>
+              <div className="my-10">
+                <div className="flex justify-center items-start">
+                  <div className="text-[144px] leading-none font-light">
+                    {parseInt(data?.list[0].main.temp as any)}
                   </div>
-                  <div className="flex">
-                    Feels like:
-                    <div className="flex ml-2">
-                      {parseInt(data?.list[0].main.feels_like as any)}
-                      <TbTemperatureCelsius />
+                  <div className="text-4xl">
+                    <TbTemperatureCelsius />
+                  </div>
+                </div>
+
+                <div className="capitalize text-center">
+                  {data?.list[0].weather[0].description}
+                </div>
+                <div className="capitalize text-center">
+                  H:{parseInt(Math.max(...highestTemp).toString())} L:
+                  {parseInt(Math.min(...lowestTemp).toString())}
+                </div>
+              </div>
+
+              <div className="max-w-[378px] mx-auto flex flex-col gap-y-6">
+                <div className="flex justify-between">
+                  <div className="flex items-center gap-x-2">
+                    <div className="text-[20px]">
+                      <BsEye />
+                    </div>
+                    <div>
+                      Visibility:
+                      <span className="ml-2">
+                        {(data?.list[0].visibility as number) / 1000} km
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-x-2">
+                    <div className="text-[20px]">
+                      <BsThermometer />
+                    </div>
+                    <div className="flex">
+                      Feels like:
+                      <div className="flex ml-2">
+                        {parseInt(data?.list[0].main.feels_like as any)}
+                        <TbTemperatureCelsius />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-between">
+                  <div className="flex items-center gap-x-2">
+                    <div className="text-[20px]">
+                      <BsWater />
+                    </div>
+                    <div>
+                      Humidity:
+                      <span className="ml-2">
+                        {data?.list[0].main.humidity} %
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-x-2">
+                    <div className="text-[20px]">
+                      <BsWind />
+                    </div>
+                    <div>
+                      Wind:
+                      <span className="ml-2">
+                        {data?.list[0].wind.speed} m/s
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="flex justify-between">
-                <div className="flex items-center gap-x-2">
-                  <div className="text-[20px]">
-                    <BsWater />
-                  </div>
-                  <div>
-                    Humidity:
-                    <span className="ml-2">
-                      {data?.list[0].main.humidity} %
-                    </span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-x-2">
-                  <div className="text-[20px]">
-                    <BsWind />
-                  </div>
-                  <div>
-                    Wind:
-                    <span className="ml-2">{data?.list[0].wind.speed} m/s</span>
-                  </div>
-                </div>
-              </div>
             </div>
+          )}
+        </div>
+        <div className="">
+          <label className="font-bold text-2xl text-white">Hourly</label>
+          <div className="flex flex-wrap">
+            {data?.list.slice(0, 8).map((x) => {
+              return (
+                <HourlyCard
+                  key={x.dt}
+                  dateHours={x.dt_txt}
+                  temp={x.main.temp_max}
+                  icon={x.weather.map((x) => x.main).toString()}
+                />
+              );
+            })}
           </div>
-        )}
-      </div>
-      <div className="">
-        <label className="font-bold text-2xl text-white">Hourly</label>
-        <div className="flex">{data?.list.slice(0, 8).map((x)=>{
-         
-          return <HourlyCard key={x.dt} dateHours={x.dt_txt} temp={x.main.temp_max} icon={x.weather.map((x)=>x.main).toString()} />
-        })}</div>
-        
+          <label className="font-bold text-2xl text-white">Daily</label>
+          <div className="flex flex-wrap flex-col">
+            <>
+              {groupWeatherByDays().map((x) => {
+                return (
+                  <DayCard
+                    key={x.dt}
+                    day={x.date}
+                    description={x.description}
+                    temp_min={x.temp_min}
+                    temp_max={x.temp_max}
+                    icon={x.icon}
+                    weather={x.weather}
+                  />
+                );
+              })}
+            </>
+          </div>
+        </div>
+        <div></div>
       </div>
     </div>
   );

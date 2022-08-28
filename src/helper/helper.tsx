@@ -8,7 +8,7 @@ import {
 
 import { BsCloudHaze2Fill, BsCloudDrizzleFill } from "react-icons/bs";
 
-export const checkWeatherIcon = (weatherIcon: any, description: any) => {
+export const checkWeatherIcon = (weatherIcon: any, description: string) => {
   switch (weatherIcon) {
     case "Clouds":
       if (description === "broken clouds") {

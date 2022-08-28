@@ -5,14 +5,14 @@ import { IoMdSearch } from "react-icons/io";
 import { BsEye, BsWater, BsThermometer, BsWind } from "react-icons/bs";
 import axios from "axios";
 import HourlyCard from "../HourlyCard/HourlyCard";
-import { Weather } from "../../model/Weather";
+import { IWeather } from "../../model/IWeather";
 import DayCard from "../DayCard/DayCard";
 import { checkWeatherIcon } from "../../helper/helper";
 
 const API_KEY = "2ee9e9176b718db0ca63552f88e5814d";
 
 const Home = () => {
-  const [data, setData] = useState<Weather>();
+  const [data, setData] = useState<IWeather>();
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -102,42 +102,45 @@ const Home = () => {
     data?.list[0].weather[0].description
   );
 
-  const lowestTemp = data?.list.slice(0, 8).map((x) => {
-    return Math.min(x.main.temp_min);
+  const lowestTemp = data?.list.slice(0, 8).map((el) => {
+    return Math.min(el.main.temp_min);
   });
-  const highestTemp = data?.list.slice(0, 8).map((x) => {
-    return Math.max(x.main.temp_max);
+  const highestTemp = data?.list.slice(0, 8).map((el) => {
+    return Math.max(el.main.temp_max);
   });
 
-  const groupWeatherByDays = () => {
+  const mappedWeather = () => {
     const weatherGroupedByDays: any[] = [];
 
     if (data) {
-      data.list.map((forecast: any) => {
-        const currDate = new Date(forecast.dt_txt).toLocaleString("en-GB", {
-          weekday: "long",
-        });
+      data.list.map(
+        (forecast: {
+          dt_txt: string;
+          weather: { main: string; description: string; icon: string }[];
+        }) => {
+          const currDate = new Date(forecast.dt_txt).toLocaleString("en-GB", {
+            weekday: "long",
+          });
 
-        const existingDate = weatherGroupedByDays.find(
-          (day) => day.date.toLocaleString() === currDate.toLocaleString()
-        );
+          const existingDate = weatherGroupedByDays.find(
+            (day) => day.date.toLocaleString() === currDate.toLocaleString()
+          );
 
-        if (existingDate) return existingDate.weather.push(forecast);
+          if (existingDate) return existingDate.weather.push(forecast);
 
-        return weatherGroupedByDays.push({
-          data: forecast,
-
-          icon: forecast.weather[0].main,
-          description: forecast.weather[0].description,
-          date: currDate,
-          fullDate: currDate,
-          overallConditions: forecast.weather[0].main,
-          overallWeatherIcon: forecast.weather[0].icon,
-          weather: [forecast],
-        });
-      });
+          return weatherGroupedByDays.push({
+            data: forecast,
+            icon: forecast.weather[0].main,
+            description: forecast.weather[0].description,
+            date: currDate,
+            fullDate: currDate,
+            overallConditions: forecast.weather[0].main,
+            overallWeatherIcon: forecast.weather[0].icon,
+            weather: [forecast],
+          });
+        }
+      );
     }
-
     return weatherGroupedByDays;
   };
 
@@ -175,7 +178,7 @@ const Home = () => {
         </div>
       </form>
       <div className="flex w-full  flex-wrap justify-evenly">
-        <div className="w-full max-w-[450px] max-h-[494px] bg-black/20 min-h-auto text-white backdrop-blur-[32px] rounded-[32px] py-12 px-6">
+        <div className="w-full max-w-[450px] max-h-[554px] bg-black/20 min-h-auto text-white backdrop-blur-[32px] rounded-[32px] py-12 px-6">
           {loading ? (
             <div className="w-full h-full flex justify-center items-center">
               <ImSpinner8 className="text-white text-5xl animate-spin" />
@@ -197,7 +200,7 @@ const Home = () => {
               <div className="my-10">
                 <div className="flex justify-center items-start">
                   <div className="text-[144px] leading-none font-light">
-                    {parseInt(data?.list[0].main.temp as any)}
+                    {parseInt(data?.list[0].main.temp.toString())}
                   </div>
                   <div className="text-4xl">
                     <TbTemperatureCelsius />
@@ -208,10 +211,10 @@ const Home = () => {
                   {data?.list[0].weather[0].description}
                 </div>
                 <div className="capitalize text-center flex items-center justify-center">
-                  H:{parseInt(Math.max(...highestTemp).toString())}{" "}
+                  H:{parseInt(Math.max(...highestTemp).toString())}
                   <TbTemperatureCelsius />
                   <span className="ml-1"></span>
-                  {parseInt(Math.min(...lowestTemp).toString())}{" "}
+                  {parseInt(Math.min(...lowestTemp).toString())}
                   <TbTemperatureCelsius />
                 </div>
               </div>
@@ -236,7 +239,7 @@ const Home = () => {
                     <div className="flex">
                       Feels like:
                       <div className="flex ml-2">
-                        {parseInt(data?.list[0].main.feels_like as any)}
+                        {parseInt(data?.list[0].main.feels_like.toString())}
                         <TbTemperatureCelsius />
                       </div>
                     </div>
@@ -270,16 +273,16 @@ const Home = () => {
             </div>
           )}
         </div>
-        <div className="">
+        <div>
           <label className="font-bold text-2xl text-white">Hourly</label>
           <div className="flex flex-wrap justify-center">
-            {data?.list.slice(0, 8).map((x) => {
+            {data?.list.slice(0, 8).map((el) => {
               return (
                 <HourlyCard
-                  key={x.dt}
-                  dateHours={x.dt_txt}
-                  temp={x.main.temp_max}
-                  icon={x.weather.map((x) => x.main).toString()}
+                  key={el.dt}
+                  dateHours={el.dt_txt.toString()}
+                  temp={el.main.temp_max as number}
+                  icon={el.weather.map((el) => el.main).toString()}
                   displayNow={true}
                 />
               );
@@ -288,16 +291,14 @@ const Home = () => {
           <label className="font-bold text-2xl text-white">Daily</label>
           <div className="flex flex-wrap flex-col">
             <>
-              {groupWeatherByDays().map((x) => {
+              {mappedWeather().map((day) => {
                 return (
                   <DayCard
-                    key={x.dt}
-                    data={x.data}
-                    forecast={x}
-                    day={x.date}
-                    description={x.description}
-                    icon={x.icon}
-                    weather={x.weather}
+                    key={day.dt}
+                    forecast={day}
+                    day={day.date}
+                    description={day.description}
+                    icon={day.icon}
                   />
                 );
               })}

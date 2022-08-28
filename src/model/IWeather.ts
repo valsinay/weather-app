@@ -1,4 +1,4 @@
-export interface Weather {
+export interface IWeather {
     city: { name: string; country: string };
     list: {
       dt?: number;

@@ -3,18 +3,25 @@ import { TbTemperatureCelsius } from "react-icons/tb";
 import { checkWeatherIcon } from "../../helper/helper";
 import HourlyCard from "../HourlyCard/HourlyCard";
 
-const DayCard = ({ day, icon, description, forecast }: any) => {
-  let weatherIcon = checkWeatherIcon(icon, description);
-  const [isExpanded, setIsExpanded] = useState(false);
+export interface IDayCard{
+  day:string,
+  icon:string,
+  description:string,
+  forecast:any
+}
 
-  
-  const highestTemp = forecast.weather.map((x: any) => {
-    return Math.max(x.main.temp_max);
+const DayCard = ({ day, icon, description, forecast }: IDayCard) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  let weatherIcon = checkWeatherIcon(icon, description);
+
+  const highestTemp = forecast.weather.map((el: {main:{temp_max:number}}) => {
+    return Math.max(el.main.temp_max);
   });
-  const lowestTemp = forecast.weather.map((x: any) => {
-    return Math.min(x.main.temp_min);
+  const lowestTemp = forecast.weather.map((el: {main:{temp_min:number}}) => {
+    return Math.min(el.main.temp_min);
   });
-  const checkIsToday =
+
+  const checkDateIsToday =
     new Date(forecast.data.dt_txt).toDateString() === new Date().toDateString();
 
   return (
@@ -25,16 +32,21 @@ const DayCard = ({ day, icon, description, forecast }: any) => {
             <div className="flex items-center ">
               <div className="text-[37px]">{weatherIcon}</div>
               <label className="pl-2 font-medium text-black">
-                {checkIsToday ? "Today" : day}
+                {checkDateIsToday ? "Today" : day}
               </label>
             </div>
             <div className="flex items-center ">
               <label className="text-black">{description}</label>
               <label className="pl-2 text-[#757575] flex items-center">
-                <span className="font-medium">
-                  {parseInt(Math.max(...highestTemp).toString())} 
-                </span><TbTemperatureCelsius />{" "}/{" "}
-             {parseInt(Math.min(...lowestTemp).toString())} <TbTemperatureCelsius />
+                <span className="font-medium flex  mr-1">
+                  {parseInt(Math.max(...highestTemp).toString())}
+                  <TbTemperatureCelsius />
+                </span>
+                /
+                <span className="flex  ml-1">
+                  {parseInt(Math.min(...lowestTemp).toString())}
+                  <TbTemperatureCelsius color="#757575" />
+                </span>
               </label>
             </div>
           </div>
@@ -44,13 +56,13 @@ const DayCard = ({ day, icon, description, forecast }: any) => {
             isExpanded ? "h-32" : "h-0"
           }`}
         >
-          {forecast.weather.map((x: any) => {
+          {forecast.weather.map((el:{dt:string,dt_txt:string, main:{temp:number}, weather:{main:string}[]} ) => {
             return (
               <HourlyCard
-                key={x.dt}
-                dateHours={x.dt_txt}
-                temp={x.main.temp}
-                icon={x.weather[0].main}
+                key={el.dt}
+                dateHours={el.dt_txt}
+                temp={el.main.temp as number}
+                icon={el.weather[0].main}
                 displayNow={false}
               />
             );

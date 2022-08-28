@@ -5,6 +5,7 @@
  #### `React + TS - Frontend` 
  #### `TailwindCSS`
  #### `React Icons - icons and loader` 
+ ###  `Axios - handling http requests`
  #### `React Hooks`  
  #### `Custom Error handling` 
 

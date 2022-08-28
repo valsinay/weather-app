@@ -1,11 +1,11 @@
 import { TbTemperatureCelsius } from "react-icons/tb";
 import { checkWeatherIcon } from "../../helper/helper";
 
-export interface IHourlyCard{
-  dateHours:string,
-  temp:number,
-  icon:string,
-  displayNow:boolean
+export interface IHourlyCard {
+  dateHours: string;
+  temp: number;
+  icon: string;
+  displayNow: boolean;
 }
 
 const HourlyCard = ({ dateHours, temp, icon, displayNow }: IHourlyCard) => {
@@ -21,14 +21,15 @@ const HourlyCard = ({ dateHours, temp, icon, displayNow }: IHourlyCard) => {
         <label>
           {checkSameDate && displayNow ? (
             "Now"
-          ) :
-          <>{new Date(dateHours).getHours() + ":00"}</>
-           }
-          
+          ) : (
+            <>{new Date(dateHours).getHours() + ":00"}</>
+          )}
         </label>
         <div className="text-[37px]">{weatherIcon}</div>
 
-        <label className="flex">{parseInt(temp.toString())} <TbTemperatureCelsius color="#757575" /></label>
+        <label className="flex">
+          {parseInt(temp.toString())} <TbTemperatureCelsius color="#757575" />
+        </label>
       </div>
     </div>
   );

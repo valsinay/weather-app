@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { TbTemperatureCelsius } from "react-icons/tb";
 import { ImSpinner8 } from "react-icons/im";
 import { IoMdSearch } from "react-icons/io";
-
 import { BsEye, BsWater, BsThermometer, BsWind } from "react-icons/bs";
 import axios from "axios";
 import HourlyCard from "../HourlyCard/HourlyCard";
@@ -98,7 +97,10 @@ const Home = () => {
     );
   }
 
-  weatherIcon = checkWeatherIcon(weatherIcon);
+  weatherIcon = checkWeatherIcon(
+    weatherIcon,
+    data?.list[0].weather[0].description
+  );
 
   const lowestTemp = data?.list.slice(0, 8).map((x) => {
     return Math.min(x.main.temp_min);
@@ -112,31 +114,19 @@ const Home = () => {
 
     if (data) {
       data.list.map((forecast: any) => {
-        console.log(forecast);
-
-        const currDate = new Date(forecast.dt * 1000).toLocaleString("en-GB", {
+        const currDate = new Date(forecast.dt_txt).toLocaleString("en-GB", {
           weekday: "long",
         });
+
         const existingDate = weatherGroupedByDays.find(
-          (day) => day.date === currDate
+          (day) => day.date.toLocaleString() === currDate.toLocaleString()
         );
 
-        console.log(existingDate);
-        // const sameDates = existingDate.weather.dt_txt;
-        // console.log(sameDates);
-        
-        console.log(weatherGroupedByDays);
-        
-if(weatherGroupedByDays.length ==5){
-  weatherGroupedByDays.pop()
-}
-
-        if (existingDate  ) return existingDate.weather.push(forecast);
+        if (existingDate) return existingDate.weather.push(forecast);
 
         return weatherGroupedByDays.push({
           data: forecast,
-          temp_max: forecast.main.temp_max,
-          temp_min: forecast.main.temp_min,
+
           icon: forecast.weather[0].main,
           description: forecast.weather[0].description,
           date: currDate,
@@ -152,7 +142,7 @@ if(weatherGroupedByDays.length ==5){
   };
 
   return (
-    <div className="w-full h-[100%] bg-gradient-to-r from-violet-500 to-fuchsia-500 flex flex-col items-center justify-center px-4 lg:px-0 ">
+    <div className="w-full p-4 bg-gradient-to-r from-violet-500 to-fuchsia-500 flex flex-col items-center justify-center px-4 lg:px-0 ">
       {errorMessage && (
         <div className="w-full max-w-[90vw] lg:max-w-[450px] bg-[#ff208c] text-white my-4 lg:top-10 p-4 capitalize rounded-md">{`${errorMessage}`}</div>
       )}
@@ -185,7 +175,7 @@ if(weatherGroupedByDays.length ==5){
         </div>
       </form>
       <div className="flex w-full  flex-wrap justify-evenly">
-        <div className="w-full max-w-[450px] bg-black/20 min-h-auto text-white backdrop-blur-[32px] rounded-[32px] py-12 px-6">
+        <div className="w-full max-w-[450px] max-h-[494px] bg-black/20 min-h-auto text-white backdrop-blur-[32px] rounded-[32px] py-12 px-6">
           {loading ? (
             <div className="w-full h-full flex justify-center items-center">
               <ImSpinner8 className="text-white text-5xl animate-spin" />
@@ -217,9 +207,12 @@ if(weatherGroupedByDays.length ==5){
                 <div className="capitalize text-center">
                   {data?.list[0].weather[0].description}
                 </div>
-                <div className="capitalize text-center">
-                  H:{parseInt(Math.max(...highestTemp).toString())} L:
-                  {parseInt(Math.min(...lowestTemp).toString())}
+                <div className="capitalize text-center flex items-center justify-center">
+                  H:{parseInt(Math.max(...highestTemp).toString())}{" "}
+                  <TbTemperatureCelsius />
+                  <span className="ml-1"></span>
+                  {parseInt(Math.min(...lowestTemp).toString())}{" "}
+                  <TbTemperatureCelsius />
                 </div>
               </div>
 
@@ -279,7 +272,7 @@ if(weatherGroupedByDays.length ==5){
         </div>
         <div className="">
           <label className="font-bold text-2xl text-white">Hourly</label>
-          <div className="flex flex-wrap">
+          <div className="flex flex-wrap justify-center">
             {data?.list.slice(0, 8).map((x) => {
               return (
                 <HourlyCard
@@ -287,6 +280,7 @@ if(weatherGroupedByDays.length ==5){
                   dateHours={x.dt_txt}
                   temp={x.main.temp_max}
                   icon={x.weather.map((x) => x.main).toString()}
+                  displayNow={true}
                 />
               );
             })}
@@ -298,10 +292,10 @@ if(weatherGroupedByDays.length ==5){
                 return (
                   <DayCard
                     key={x.dt}
+                    data={x.data}
+                    forecast={x}
                     day={x.date}
                     description={x.description}
-                    temp_min={x.temp_min}
-                    temp_max={x.temp_max}
                     icon={x.icon}
                     weather={x.weather}
                   />

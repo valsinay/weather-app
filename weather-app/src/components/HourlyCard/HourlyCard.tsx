@@ -1,7 +1,8 @@
+import { TbTemperatureCelsius } from "react-icons/tb";
 import { checkWeatherIcon } from "../../helper/helper";
 
-const HourlyCard = ({ dateHours, temp, icon }: any) => {
-  let weatherIcon = checkWeatherIcon(icon);
+const HourlyCard = ({ dateHours, temp, icon, displayNow }: any) => {
+  let weatherIcon = checkWeatherIcon(icon, icon);
 
   const checkSameDate =
     new Date(dateHours).getHours() <= new Date().getHours() &&
@@ -11,15 +12,16 @@ const HourlyCard = ({ dateHours, temp, icon }: any) => {
     <div className="bg-white text-[#757575] font-normal h-[120px] w-[75px]  rounded-[15px] mx-[15px] my-[5px]">
       <div className="flex items-center flex-col  justify-evenly h-full ">
         <label>
-          {!checkSameDate ? (
-            <>{new Date(dateHours).getHours() + ":00"}</>
-          ) : (
+          {checkSameDate && displayNow ? (
             "Now"
-          )}
+          ) :
+          <>{new Date(dateHours).getHours() + ":00"}</>
+           }
+          
         </label>
         <div className="text-[37px]">{weatherIcon}</div>
 
-        <label>{Math.round(temp)}°C</label>
+        <label className="flex items-center">{parseInt(temp)} <TbTemperatureCelsius /></label>
       </div>
     </div>
   );

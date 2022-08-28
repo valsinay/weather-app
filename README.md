@@ -6,7 +6,6 @@
  #### `TailwindCSS`
  #### `React Icons - icons and loader` 
  #### `React Hooks`  
- #### `Context API (Keeping User Data)` 
  #### `Custom Error handling` 
 
 ## ⚠ Future Improvements
